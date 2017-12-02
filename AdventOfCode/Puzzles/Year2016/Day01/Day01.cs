@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace AdventOfCode.Puzzles.Year2016.Day01 {
 	/// <summary>
@@ -125,42 +126,29 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 		/// <param name="instructions">A list of drone instructions.</param>
 		/// <returns>The total distance between the start location and first revisit location.</returns>
 		private string FindFirstDuplicateDistance( List<Instruction> instructions ) {
-			// Dealing with a possibly-infinite city is tricky.  So let's cheat, and make it large, but finite!
-			int memorySize = 1000;
-			bool[][] memoryMap= new bool[ memorySize ][];
-			for( int i = 0; i < memorySize; i++ ) {
-				bool[] memoryRow = new bool[ memorySize ];
-
-				for( int j = 0; j < memorySize; j++ ) {
-					memoryRow[ j ] = false;
-				}
-
-				memoryMap[ i ] = memoryRow;
-			}
-
-			// 0,0 is not a valid starting point this time, since we're mapping with an array, and negative array indices have unintended behaviours.
-			int initialPos = memorySize / 2;
-			xPos = yPos = initialPos;
+			List<Point> visitedAddresses = new List<Point>();
+			xPos = yPos = 0;
 
 			foreach( Instruction instruction in instructions ) {
 				Turn( instruction.direction );
 
 				// Walk one block at a time, mapping new locations and verifying if we've been here before.
 				for( int i = 0; i < instruction.distance; i++ ) {
+					Point currentAddress = new Point( xPos, yPos );
+
 					// If we're revisiting somewhere, we can stop walking; we've reached our destination.
-					if( memoryMap[ xPos ][ yPos ] ) {
+					if( visitedAddresses.Contains( currentAddress ) ) {
 						break;
 					}
 
-					// Mark our location as visited.
-					memoryMap[ xPos ][ yPos ] = true;
+					// Log the current location as visited.
+					visitedAddresses.Add( currentAddress );
 
 					Walk( 1 );
 				}
 			}
-
-			// Remove the initial offset while calculating the final distance.
-			return "" + ( Math.Abs( xPos - initialPos ) + Math.Abs( yPos - initialPos ) );
+			
+			return "" + ( Math.Abs( xPos ) + Math.Abs( yPos ) );
 		}
 
 		/// <summary>
