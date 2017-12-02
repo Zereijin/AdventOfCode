@@ -168,7 +168,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 		/// </summary>
 		/// <param name="direction">The direction to turn.</param>
 		private void Turn( Direction direction ) {
-			int numDirections = Enum.GetNames( typeof( Direction ) ).Length;
+			int numFacings = Enum.GetNames( typeof( Facing ) ).Length;
 
 			switch( direction ) {
 				case Direction.LEFT:
@@ -176,7 +176,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 
 					// If we go left of NORTH (our leftmost direction), wrap around to WEST.
 					while( currentFacing < Facing.NORTH ) {
-						currentFacing += numDirections;
+						currentFacing += numFacings;
 					}
 					break;
 				case Direction.RIGHT:
@@ -184,7 +184,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 
 					// If we go right of WEST (our rightmost direction), wrap around to NORTH.
 					while( currentFacing > Facing.WEST ) {
-						currentFacing -= numDirections;
+						currentFacing -= numFacings;
 					}
 					break;
 			}
