@@ -101,7 +101,7 @@ namespace AdventOfCode {
 		}
 
 		/// <summary>
-		/// Helper method that prints a line to the console, then waits for user input before proceeding.
+		/// Print a line to the console, then wait for user input before proceeding.
 		/// </summary>
 		/// <remarks>
 		/// Without introducing this wait command, this program, when run outside of a shell, would display a puzzle solution and then immediately close the window.  We cannot read that quickly.

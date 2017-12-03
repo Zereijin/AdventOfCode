@@ -8,7 +8,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day02 {
 		public string directions;
 
 		/// <summary>
-		/// Creates an instruction.
+		/// Create an instruction.
 		/// </summary>
 		/// <param name="directions">A string with directional input.</param>
 		/// <remarks>

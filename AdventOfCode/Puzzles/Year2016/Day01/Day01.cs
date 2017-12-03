@@ -29,7 +29,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 		public int distance;
 
 		/// <summary>
-		/// Creates a drone instruction.
+		/// Create a drone instruction.
 		/// </summary>
 		/// <param name="direction">The direction to rotate.</param>
 		/// <param name="distance">The number of blocks to walk after rotating.</param>
@@ -104,7 +104,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 		}
 
 		/// <summary>
-		/// Finds the distance (in blocks) between the starting location, and the final destination after all instructions have been followed.
+		/// Find the distance (in blocks) between the starting location, and the final destination after all instructions have been followed.
 		/// </summary>
 		/// <param name="instructions">A list of drone instructions.</param>
 		/// <returns>The total distance between the start and end locations.</returns>
@@ -121,7 +121,7 @@ namespace AdventOfCode.Puzzles.Year2016.Day01 {
 		}
 
 		/// <summary>
-		/// Traverses a set of instructions until we arrive at a location we've already visited.
+		/// Traverse a set of instructions until we arrive at a location we've already visited.
 		/// </summary>
 		/// <param name="instructions">A list of drone instructions.</param>
 		/// <returns>The total distance between the start location and first revisit location.</returns>

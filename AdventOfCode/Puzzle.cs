@@ -31,7 +31,7 @@ namespace AdventOfCode {
 		protected List<TestCase> testCases;
 
 		/// <summary>
-		/// Produces a solution for the puzzle.
+		/// Produce a solution for the puzzle.
 		/// </summary>
 		/// <param name="input">The input (in string form) for the puzzle.</param>
 		/// <param name="part">The puzzle part being solved.</param>
@@ -39,7 +39,7 @@ namespace AdventOfCode {
 		public abstract string Solve( string input, int part );
 
 		/// <summary>
-		/// Loads up the puzzles test cases.
+		/// Load up the puzzle's test cases.
 		/// </summary>
 		/// <remarks>
 		/// This function initializes testCases (a list of TestCases).  When overriding, call the base constructor, then add TestCases to testCases to have them run in RunTestCases().
@@ -49,7 +49,7 @@ namespace AdventOfCode {
 		}
 
 		/// <summary>
-		/// Runs through all loaded TestCases.
+		/// Run through all loaded TestCases.
 		/// </summary>
 		/// <returns>
 		/// An empty string if all tests passed; a debug string for all failed tests otherwise.
