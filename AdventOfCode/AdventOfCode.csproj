@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Puzzle.cs" />
+    <Compile Include="Puzzles\Year2016\Day03\Day03.cs" />
     <Compile Include="Puzzles\Year2017\Day01\Day01.cs" />
     <Compile Include="Puzzles\Year2017\Day03\Day03.cs" />
     <Compile Include="Puzzles\Year2017\Day04\Day04.cs" />
@@ -58,6 +59,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Puzzles\Year2016\Day03\input.txt" />
     <Content Include="Puzzles\Year2017\Day01\input.txt" />
     <Content Include="Puzzles\Year2017\Day03\input.txt" />
     <Content Include="Puzzles\Year2017\Day04\input.txt" />
