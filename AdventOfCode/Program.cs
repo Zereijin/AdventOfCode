@@ -43,8 +43,7 @@ namespace AdventOfCode {
 		/// <param name="day">The day of the puzzle to solve.</param>
 		/// <param name="part">The part of the puzzle to solve.</param>
 		static void Solve( int year, int day, int part ) {
-			Console.WriteLine( String.Format( "Advent of Code {0} - Day {1} Part {2}", year, day, part ) );
-			Console.WriteLine();
+			Console.Title = ( String.Format( "Advent of Code {0} - Day {1} Part {2}", year, day, part ) );
 
 			Puzzle puzzle = GetPuzzle( year, day );
 
