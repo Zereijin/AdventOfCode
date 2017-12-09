@@ -17,16 +17,21 @@ namespace AdventOfCode.Puzzles.Year2017.Day04 {
 			testCases.Add( new TestCase( "oiii ioii iioi iiio", "0", 2 ) );
 		}
 
-		private List<List<string>> ParseInput( string input ) {
+		/// <summary>
+		/// Break input down into a list of Passphrases.
+		/// </summary>
+		/// <param name="input">The input string.</param>
+		/// <returns>The input string converted into a list of Passphrases.</returns>
+		private List<Passphrase> ParseInput( string input ) {
 			string[] inputArray = input.Split( '\n' );
-			List<List<string>> passphrases = new List<List<string>>();
+			List<Passphrase> passphrases = new List<Passphrase>();
 
 			foreach( string entry in inputArray ) {
-				List<string> passphrase = new List<string>();
+				Passphrase passphrase = new Passphrase();
 
 				string[] words = entry.Split( ' ' );
 				foreach( string word in words ) {
-					passphrase.Add( word );
+					passphrase.AddWord( word );
 				}
 
 				passphrases.Add( passphrase );
@@ -36,73 +41,117 @@ namespace AdventOfCode.Puzzles.Year2017.Day04 {
 		}
 
 		public override string Solve( string input, int part ) {
-			List<List<string>> passphrases = ParseInput( input );
+			List<Passphrase> passphrases = ParseInput( input );
 			
 			switch( part ) {
 				case 1:
-					return "" + GetNonDuplicateCount( passphrases );
-					break;
+					return "" + GetValidPassphrases( PassphraseHasNoDuplicateWords, passphrases ).Count;
 				case 2:
-					return "" + GetNonAnagramCount( passphrases );
-					break;
-				default:
-				return String.Format( "Day 04 part {0} solver not found.", part );
+					return "" + GetValidPassphrases( PassphraseHasNoDuplicateAnagrams, passphrases ).Count;
 			}
 
+			return String.Format( "Day 04 part {0} solver not found.", part );
 		}
 
-		private int GetNonDuplicateCount( List<List<string>> passphrases ) {
-			int validPassphrases = 0;
+		/// <summary>
+		/// Get a list of valid passphrases.
+		/// </summary>
+		/// <param name="validCondition">The function to determine passphrase validity.</param>
+		/// <param name="passphrases">The list of unvalidated passphrases to search.</param>
+		/// <returns></returns>
+		private List<Passphrase> GetValidPassphrases( Func<Passphrase, bool> validCondition, List<Passphrase> passphrases ) {
+			List<Passphrase> validPassphrases = new List<Passphrase>();
 
-			foreach( List<string> passphrase in passphrases ) {
-				if( !HasDuplicate( passphrase ) ) {
-					validPassphrases++;
+			foreach( Passphrase passphrase in passphrases ) {
+				if( validCondition( passphrase ) ) {
+					validPassphrases.Add( passphrase );
 				}
 			}
 
 			return validPassphrases;
 		}
 
-		private int GetNonAnagramCount( List<List<string>> passphrases ) {
-			int validPassphrases = 0;
+		/// <summary>
+		/// Check if a passphrase is free of duplicate words.
+		/// </summary>
+		/// <param name="passphrase">The passphrase to check.</param>
+		/// <returns>True if the passphrase has no duplicate words; false otherwise.</returns>
+		private bool PassphraseHasNoDuplicateWords( Passphrase passphrase ) {
+			return !passphrase.DetectDuplicateWords();
+		}
+		
+		/// <summary>
+		/// Check if a passphrase is free of duplicate anagrams.
+		/// </summary>
+		/// <param name="passphrase">The passphrase to check.</param>
+		/// <returns>True if the passphrase has no duplicate anagrams; false otherwise.</returns>
+		private bool PassphraseHasNoDuplicateAnagrams( Passphrase passphrase ) {
+			return !passphrase.DetectDuplicateAnagrams();
+		}
+	}
+	
+	class Passphrase {
+		private List<string> words;
+		private readonly Regex duplicateWordRegex = new Regex( @"(\b\S+\b).+(\b\1\b)" );
 
-			foreach( List<string> passphrase in passphrases ) {
-				if( !HasAnagram( passphrase ) ) {
-					validPassphrases++;
-				}
-			}
-
-			return validPassphrases;
+		public Passphrase() {
+			words = new List<string>();
 		}
 
-		private bool HasDuplicate( List<string> passphrase ) {
-			string passString = "";
-			foreach( string word in passphrase ) {
-				passString += word + " ";
-			}
-
-			string pattern = @"(\b\S+\b).+(\b\1\b)";
-			Regex regex = new Regex( pattern );
-
-			return regex.IsMatch( passString );
+		/// <summary>
+		/// Add a word to the passphrase.
+		/// </summary>
+		/// <param name="word">The word to add to the passphrase.</param>
+		public void AddWord( string word ) {
+			words.Add( word );
 		}
 
-		private bool HasAnagram( List<string> passphrase ) {
+		/// <summary>
+		/// Search the passphrase for any duplicated words.
+		/// </summary>
+		/// <returns>True if a duplicate word is detected; false otherwise.</returns>
+		public bool DetectDuplicateWords() {
+			return duplicateWordRegex.IsMatch( ToString() );
+		}
+		
+
+		/// <summary>
+		/// Search the passphrase for any duplicated anagrams.
+		/// </summary>
+		/// <returns>True if a duplicate anagram is detected; false otherwise.</returns>
+		public bool DetectDuplicateAnagrams() {
+			if( words.Count < 2 ) {
+				return false;
+			}
+
 			string passString = "";
-			foreach( string word in passphrase ) {
-				char[] charArray = word.ToCharArray();
+			for( int i = 0; i < words.Count; i++ ) {
+				char[] charArray = words[ i ].ToCharArray();
 				Array.Sort( charArray );
 
 				foreach( char letter in charArray ) {
 					passString += letter;
 				}
-				passString += " ";
+
+				if( i < words.Count - 1 ) {
+					passString += " ";
+				}
 			}
 
-			string pattern = @"(\b\S+\b).+(\b\1\b)";
-			Regex regex = new Regex( pattern );
+			return duplicateWordRegex.IsMatch( passString );
+		}
 
-			return regex.IsMatch( passString );
+		public override string ToString() {
+			if( words.Count <= 0 ) {
+				return "";
+			}
+
+			string passString = words[ 0 ];
+			for( int i = 1; i < words.Count; i++ ) {
+				passString += " " + words[ i ];
+			}
+
+			return passString;
 		}
 	}
 }
