@@ -44,13 +44,11 @@ namespace AdventOfCode.Puzzles.Year2017.Day02 {
 			switch( part ) {
 				case 1:
 					return "" + GetChecksum( numberLists );
-					break;
 				case 2:
 					return "" + GetQuotientSum( numberLists );
-					break;
-				default:
-					return String.Format( "Day 02 part {0} solver not found.", part );
 			}
+
+			return String.Format( "Day 02 part {0} solver not found.", part );
 		}
 
 		/// <summary>
