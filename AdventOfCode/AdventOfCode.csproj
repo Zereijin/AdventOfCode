@@ -68,6 +68,8 @@
     <Compile Include="Puzzles\Year2017\Day01\Day01.cs" />
     <Compile Include="Puzzles\Year2017\Day03\Day03.cs" />
     <Compile Include="Puzzles\Year2017\Day06\Day06.cs" />
+    <Compile Include="Puzzles\Year2017\Day15\Day15.cs" />
+    <Compile Include="Puzzles\Year2017\Day14\Day14.cs" />
     <Compile Include="Puzzles\Year2017\Day13\Day13.cs" />
     <Compile Include="Puzzles\Year2017\Day12\Day12.cs" />
     <Compile Include="Puzzles\Year2017\Day11\Day11.cs" />
@@ -90,6 +92,8 @@
     <Content Include="Puzzles\Year2017\Day01\input.txt" />
     <Content Include="Puzzles\Year2017\Day03\input.txt" />
     <Content Include="Puzzles\Year2017\Day06\input.txt" />
+    <Content Include="Puzzles\Year2017\Day15\input.txt" />
+    <Content Include="Puzzles\Year2017\Day14\input.txt" />
     <Content Include="Puzzles\Year2017\Day13\input.txt" />
     <Content Include="Puzzles\Year2017\Day12\input.txt" />
     <Content Include="Puzzles\Year2017\Day11\input.txt" />
