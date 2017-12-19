@@ -10,30 +10,14 @@ namespace AdventOfCode.Puzzles.Year2017.Day14 {
 			testCases.Add( new TestCase( "flqrgnkx", "8108", 1 ) );
 		}
 
-		private List<int> ParseInput( string input ) {
-			char[] inputArray = input.ToCharArray();
-			List<int> lengths = new List<int>();
-
-			foreach( char entry in inputArray ) {
-				lengths.Add( (int)entry );
-			}
-
-			return lengths;
-		}
-
 		public override string Solve( string input, int part ) {
 			List<KnotHash> knotHashes = new List<KnotHash>();
 
-			//for( int i = 0; i < 128; i++ ) {
-			//	List<int> init = ParseInput( input + "-" + i );
-			//	KnotHash knotHash = new KnotHash( 128 );
-			//	knotHash.Initialize( init );
-			//	knotHashes.Add( knotHash );
-			//}
-
-			//DEBUG
-			KnotHash knotHash = new KnotHash( "flqrgnkx-1", 256 );
-			Console.WriteLine( knotHash.ToBinString() );
+			for( int i = 0; i < 128; i++ ) {
+				KnotHash knotHash = new KnotHash( 256 );
+				knotHash.InitializeStrong( input + "-" + i );
+				knotHashes.Add( knotHash );
+			}
 
 			return "" + GetUsedSquares( knotHashes );
 
