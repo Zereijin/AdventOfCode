@@ -24,12 +24,16 @@ namespace AdventOfCode.Puzzles.Year2017.Day14 {
 		public override string Solve( string input, int part ) {
 			List<KnotHash> knotHashes = new List<KnotHash>();
 
-			for( int i = 0; i < 128; i++ ) {
-				List<int> init = ParseInput( input + "-" + i );
-				KnotHash knotHash = new KnotHash( 128 );
-				knotHash.Initialize( init );
-				knotHashes.Add( knotHash );
-			}
+			//for( int i = 0; i < 128; i++ ) {
+			//	List<int> init = ParseInput( input + "-" + i );
+			//	KnotHash knotHash = new KnotHash( 128 );
+			//	knotHash.Initialize( init );
+			//	knotHashes.Add( knotHash );
+			//}
+
+			//DEBUG
+			KnotHash knotHash = new KnotHash( "flqrgnkx-1", 256 );
+			Console.WriteLine( knotHash.ToBinString() );
 
 			return "" + GetUsedSquares( knotHashes );
 
