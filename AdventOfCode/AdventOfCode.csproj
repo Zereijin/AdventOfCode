@@ -83,6 +83,7 @@
     <Compile Include="Puzzles\Year2016\Day01\Day01.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Puzzles\Year2016\Day02\Day02.cs" />
+    <Compile Include="Puzzles\Year2017\KnotHash.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
