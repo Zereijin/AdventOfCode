@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AdventOfCode.Puzzles.Year2017 {
 	class KnotHash {
-		private int[] hash;
+		public int[] hash;
 		private int currentIndex;
 		private int skipSize;
 
-		public KnotHash( string key, int size ) {
+		/// <summary>
+		/// Create a new knot hash of the given size.
+		/// </summary>
+		/// <remarks>
+		/// The new knot hash will be a sorted array of incrementing integers.  Run InitializeWeak() or InitializeStrong()
+		/// in order to experience the hash magic.
+		/// </remarks>
+		/// <param name="size">The size of the hash.</param>
+		public KnotHash( int size ) {
 			hash = new int[ size ];
 			currentIndex = 0;
 			skipSize = 0;
@@ -18,14 +23,31 @@ namespace AdventOfCode.Puzzles.Year2017 {
 			for( int i = 0; i < size; i++ ) {
 				hash[ i ] = i;
 			}
-
-			List<int> lengths = ParseKey( key );
-			for( int i = 0; i < 64; i++ ) {
-				TieKnots( lengths );
-			}
 		}
 
-		private List<int> ParseKey( string key ) {
+		/// <summary>
+		/// Initialize the hash with a list of integers using a single round of knot-tying.
+		/// </summary>
+		/// <param name="key">A CSV list of integers.</param>
+		public void InitializeWeak( string key ) {
+			string[] keyValues = key.Split( ',' );
+			List<int> lengths = new List<int>();
+
+			foreach( string value in keyValues ) {
+				lengths.Add( Int32.Parse( value ) );
+			}
+
+			TieKnots( lengths );
+		}
+
+		/// <summary>
+		/// Initialize the hash with byte string using encryption and 64 rounds of knot-tying.
+		/// </summary>
+		/// <remarks>
+		/// "Encryption" here being the addition of the bytes 17, 31, 73, 47, and 23 to the end.
+		/// </remarks>
+		/// <param name="key">A byte string.</param>
+		public void InitializeStrong( string key ) {
 			char[] keyChars = key.ToCharArray();
 			List<int> asciiList = new List<int>();
 
@@ -38,10 +60,16 @@ namespace AdventOfCode.Puzzles.Year2017 {
 			asciiList.Add( 73 );
 			asciiList.Add( 47 );
 			asciiList.Add( 23 );
-
-			return asciiList;
+			
+			for( int i = 0; i < 64; i++ ) {
+				TieKnots( asciiList );
+			}
 		}
 
+		/// <summary>
+		/// Perform a round of knot-tying.
+		/// </summary>
+		/// <param name="lengths">A list of lengths for the knot-tying algorithm to process.</param>
 		private void TieKnots( List<int> lengths ) {
 			foreach( int length in lengths ) {
 				Reverse( length );
@@ -52,6 +80,10 @@ namespace AdventOfCode.Puzzles.Year2017 {
 			}
 		}
 
+		/// <summary>
+		/// Helper function to TieKnots().  Performs a reversal within the hash array.
+		/// </summary>
+		/// <param name="length">The number of consecutive positions to reverse, starting at the currentIndex.</param>
 		private void Reverse( int length ) {
 			int[] subArray = new int[ length ];
 			int nextIndex = 0;
@@ -75,6 +107,11 @@ namespace AdventOfCode.Puzzles.Year2017 {
 			}
 		}
 
+		/// <summary>
+		/// Get the true (circular) array index of an index that may exceed the length of the hash.
+		/// </summary>
+		/// <param name="index">The target index before wrapping.</param>
+		/// <returns>The true index after wrapping.</returns>
 		private int WrapIndexToKnotHash( int index ) {
 			while( index >= hash.Length ) {
 				index -= hash.Length;
@@ -83,6 +120,10 @@ namespace AdventOfCode.Puzzles.Year2017 {
 			return index;
 		}
 
+		/// <summary>
+		/// Produce a dense hash of the knot hash.
+		/// </summary>
+		/// <returns>The dense hash.</returns>
 		private int[] GetDenseHash() {
 			int[] denseHash = new int[ 16 ];
 			int denseSize = hash.Length / denseHash.Length;
@@ -99,6 +140,10 @@ namespace AdventOfCode.Puzzles.Year2017 {
 			return denseHash;
 		}
 
+		/// <summary>
+		/// Get a hexadecimal string representation of the knot hash.
+		/// </summary>
+		/// <returns>The knot hash as a hexadeximal string.</returns>
 		public string ToHexString() {
 			int[] denseHash = GetDenseHash();
 			string result = "";
@@ -124,7 +169,11 @@ namespace AdventOfCode.Puzzles.Year2017 {
 				default: return "" + number;
 			}
 		}
-
+		
+		/// <summary>
+		/// Get a binary string representation of the knot hash.
+		/// </summary>
+		/// <returns>The knot hash as a binary string.</returns>
 		public string ToBinString() {
 			char[] hexChars = ToHexString().ToCharArray();
 			string result = "";
