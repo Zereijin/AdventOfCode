@@ -18,7 +18,7 @@ namespace AdventOfCode.Puzzles.Year2017.Day17 {
 					InitializeSpinlock( Int32.Parse( input ) );
 					return "" + spinlock[ currentPos + 1 ];
 				case 2:
-					return "" + GetFromIndexForSize(Int32.Parse( input ), 1, 50000000 );
+					return "" + GetIndex1ForSpinLock( Int32.Parse( input ), 50000000 );
 			}
 
 			return String.Format( "Day 17 part {0} solver not found.", part );
@@ -35,31 +35,22 @@ namespace AdventOfCode.Puzzles.Year2017.Day17 {
 			}
 		}
 
-		private int GetFromIndexForSize( int stepSize, int index, Int32 size ) {
-			int pos = 0;
-			Int32 mockSize = 1;
+		private int GetIndex1ForSpinLock( int stepSize, Int32 size ) {
+			int nextIndex = 0;
+			int index1Value = 0;
 
-			while( true ) {
-				int stepsUntilWrap = ( mockSize - pos ) / ( stepSize - 1 );
-				if( mockSize + stepsUntilWrap > size ) {
-					break;
+			for( int currentSize = 1; currentSize <= size; currentSize++ ) {
+				if( nextIndex == 1 ) {
+					index1Value = currentSize - 1;
 				}
 
-				mockSize += stepsUntilWrap;
-				pos = WrapTo( pos, mockSize ) + 1;
+				nextIndex = WrapTo( nextIndex + stepSize, currentSize ) + 1;
 			}
 
-			// Pos is at the lowest index after the last wrap happened in 50M
-
-			while( pos != 1 ) {
-				mockSize--;
-				pos = WrapTo( pos - stepSize, mockSize ) - 1;
-			}
-
-			return mockSize;
+			return index1Value;
 		}
 
-		private int WrapTo( Int32 position, int size ) {
+		private int WrapTo( Int32 position, Int32 size ) {
 			if( position < 0 ) return position + size;
 
 			return position % size;
