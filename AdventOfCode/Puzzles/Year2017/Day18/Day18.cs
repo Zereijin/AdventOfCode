@@ -36,6 +36,10 @@ namespace AdventOfCode.Puzzles.Year2017.Day18 {
 		public override Int64 Execute( Dictionary<char, Int64> registry ) {
 			return GetValue( frequency, registry );
 		}
+
+		public string GetFrequencyString() {
+			return frequency;
+		}
 	}
 
 	class Set : Command {
@@ -116,6 +120,10 @@ namespace AdventOfCode.Puzzles.Year2017.Day18 {
 		public override Int64 Execute( Dictionary<char, Int64> registry ) {
 			return GetValue( value, registry );
 		}
+
+		public string GetValueString() {
+			return value;
+		}
 	}
 
 	class JumpIfGreaterThan0 : Command {
@@ -136,6 +144,34 @@ namespace AdventOfCode.Puzzles.Year2017.Day18 {
 		}
 	}
 
+	class Send : Command {
+		private string value;
+
+		public Send( string value ) {
+			this.value = value;
+		}
+
+		public override Int64 Execute( Dictionary<char, long> registry ) {
+			return GetValue( value, registry );
+		}
+	}
+
+	class Receive : Command {
+		private string value;
+
+		public Receive( string value ) {
+			this.value = value;
+		}
+
+		public override Int64 Execute( Dictionary<char, long> registry ) {
+			return GetValue( value, registry );
+		}
+
+		public string GetValueString() {
+			return value;
+		}
+	}
+
 	class Day18 : Puzzle {
 		Dictionary<char, Int64> registry;
 
@@ -152,6 +188,13 @@ rcv a
 jgz a -1
 set a 1
 jgz a -2";
+			string testThreaded = @"snd 1
+snd 2
+snd p
+rcv a
+rcv b
+rcv c
+rcv d";
 
 			testCases.Add( new TestCase( @"snd 0
 rcv 0
@@ -164,6 +207,7 @@ rcv a
 snd 3
 rcv b", "2", 1 ) );
 			testCases.Add( new TestCase( testDuet, "4", 1 ) );
+			testCases.Add( new TestCase( testThreaded, "3", 2 ) );
 		}
 
 		private List<Command> ParseInput( string input ) {
@@ -224,8 +268,34 @@ rcv b", "2", 1 ) );
 			return commands;
 		}
 
+		private List<Command> ParseInputForThreadedDuet( string input ) {
+			List<Command> commands = ParseInput( input );
+
+			for( int i = 0; i < commands.Count; i++ ) {
+				Command command = commands[ i ];
+
+				if( command.GetType() == typeof( Play ) ) {
+					commands[ i ] = new Send( ( (Play)command ).GetFrequencyString() );
+				} else if( command.GetType() == typeof( Recover ) ) {
+					commands[ i ] = new Receive( ( (Recover)command ).GetValueString() );
+				}
+			}
+
+			return commands;
+		}
 
 		public override string Solve( string input, int part ) {
+			switch( part ) {
+				case 1:
+					return PlayDuet( input );
+				case 2:
+					return "" + GetProgram1SendCountFromThreadedDuet( input );
+			}
+
+			return String.Format( "Day 18 part {0} solver not found.", part );
+		}
+
+		public string PlayDuet( string input ) {			
 			registry = new Dictionary<char, Int64>();
 			List<Command> commands = ParseInput( input );
 			Int64 lastSound = -1;
@@ -254,7 +324,111 @@ rcv b", "2", 1 ) );
 				index++;
 			}
 
-			return String.Format( "Day 18 part {0} solver not found.", part );
+			return "failure";
+		}
+
+		public int GetProgram1SendCountFromThreadedDuet( string input ) {
+			List<Command> commands = ParseInputForThreadedDuet( input );
+			List<Program> programs = new List<Program>();
+
+			for( int i = 0; i < 2; i++ ) {
+				programs.Add( new Program( i, commands ) );
+			}
+
+			programs[ 0 ].partner = programs[ 1 ];
+			programs[ 1 ].partner = programs[ 0 ];
+
+			return 0;
+		}
+	}
+
+	class Program {
+		private Dictionary<char, Int64> registry;
+		private List<Command> commandList;
+
+		public Int64 sendCount;
+		public Program partner;
+
+		private Queue<Int64> receiveQueue;
+		private bool isSleeping;
+		private int commandIndex;
+
+		public Program( int id, List<Command> commands ) {
+			registry[ 'p' ] = id;
+			commandList = commands;
+
+			sendCount = 0;
+
+			isSleeping = false;
+			receiveQueue = new Queue<Int64>();
+			commandIndex = 0;
+		}
+
+		public void ExecuteReceive( Receive command ) {
+			registry[ command.GetValueString()[ 0 ] ] = receiveQueue.Dequeue();
+		}
+
+		/// <summary>
+		/// Try the program's next command in the queue.
+		/// </summary>
+		/// <returns>False if the program terminated; true otherwise.</returns>
+		public bool AttemptNextCommand() {
+			Command command = commandList[ commandIndex ];
+
+			if( isSleeping ) {
+				if( receiveQueue.Count > 0 ) {
+					isSleeping = false;
+					ExecuteReceive( (Receive)command );
+					commandIndex++;
+				} else {
+					// Check for Deadlock
+					if( partner.IsSleeping() ) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+			
+			if( command.GetType() == typeof( Send ) ) {
+				sendCount++;
+				partner.Receive( ( (Send)command ).Execute( registry ) );
+			} else if( command.GetType() == typeof( Receive ) ) {
+				if( receiveQueue.Count <= 0 ) {
+					isSleeping = true;
+					return true;
+				} else {
+					ExecuteReceive( (Receive)command );
+				}
+			} else if( command.GetType() == typeof( JumpIfGreaterThan0 ) ) {
+				Int64 jumpOffset = command.Execute( registry );
+
+				if( jumpOffset != 0 ) {
+					commandIndex += (int)command.Execute( registry );
+					return !IsCommandIndexOutOfBounds();
+				}
+			} else {
+				command.Execute( registry );
+			}
+
+			commandIndex++;
+			return !IsCommandIndexOutOfBounds();
+		}
+
+		private bool IsCommandIndexOutOfBounds() {
+			if( commandIndex < 0 || commandIndex >= commandList.Count ) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool IsSleeping() {
+			return isSleeping;
+		}
+
+		public void Receive( Int64 value ) {
+			receiveQueue.Enqueue( value );
 		}
 	}
 }
