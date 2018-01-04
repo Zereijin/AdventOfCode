@@ -327,7 +327,7 @@ rcv b", "2", 1 ) );
 			return "failure";
 		}
 
-		public int GetProgram1SendCountFromThreadedDuet( string input ) {
+		public Int64 GetProgram1SendCountFromThreadedDuet( string input ) {
 			List<Command> commands = ParseInputForThreadedDuet( input );
 			List<Program> programs = new List<Program>();
 
@@ -338,7 +338,25 @@ rcv b", "2", 1 ) );
 			programs[ 0 ].partner = programs[ 1 ];
 			programs[ 1 ].partner = programs[ 0 ];
 
-			return 0;
+			List<bool> programsActive = new List<bool>();
+			foreach( Program program in programs ) {
+				programsActive.Add( true );
+			}
+
+			bool isAProgramStillRunning = true;
+			while( isAProgramStillRunning ) {
+				isAProgramStillRunning = false;
+
+				for( int i = 0; i < 2; i++ ) {
+					if( programsActive[ i ] ) {
+						programsActive[ i ] = programs[ i ].AttemptNextCommand();
+					}
+
+					isAProgramStillRunning = isAProgramStillRunning || programsActive[ i ];
+				}
+			}
+
+			return programs[ 1 ].sendCount;
 		}
 	}
 
@@ -354,6 +372,7 @@ rcv b", "2", 1 ) );
 		private int commandIndex;
 
 		public Program( int id, List<Command> commands ) {
+			registry = new Dictionary<char, Int64>();
 			registry[ 'p' ] = id;
 			commandList = commands;
 
