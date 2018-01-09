@@ -39,7 +39,7 @@ p=<-2,0,0>, v=<1,0,0>, a=<0,0,0>
 p=<3,0,0>, v=<-1,0,0>, a=<0,0,0>";
 
 			testCases.Add( new TestCase( testParticles, "0", 1 ) );
-			testCases.Add( new TestCase( testRemoveParticles, "3", 2 ) );
+			testCases.Add( new TestCase( testRemoveParticles, "1", 2 ) );
 		}
 
 		private List<Particle> ParseInput( string input ) {
@@ -67,14 +67,36 @@ p=<3,0,0>, v=<-1,0,0>, a=<0,0,0>";
 				case 1:
 					return "" + GetIndexOfClosestToOriginOverInfinity( particles );
 				case 2:
-					return "" + GetIndexOfClosestToOriginOverInfinity( particles, true );
+					return "" + GetParticleCountAfterCollisions( particles );
 			}
 			
 
 			return String.Format( "Day 20 part {0} solver not found.", part );
 		}
 
-		private int GetIndexOfClosestToOriginOverInfinity( List<Particle> particles, bool removeCollisions = false  ) {
+		private int GetIndexOfClosestToOriginOverInfinity( List<Particle> particles ) {
+			int lastWinnerIndex = -1;
+			int consecutiveWins = 0;
+			int targetConsecutiveWins = 1000;
+
+			while( consecutiveWins < targetConsecutiveWins ) {
+				for( int i = 0; i < particles.Count; i++ ) {
+					particles[ i ] = Update( particles[ i ] );
+				}
+
+				int newWinnerIndex = GetIndexOfClosest( particles );
+				if( lastWinnerIndex == newWinnerIndex ) {
+					consecutiveWins++;
+				} else {
+					lastWinnerIndex = newWinnerIndex;
+					consecutiveWins = 0;
+				}
+			}
+
+			return lastWinnerIndex;
+		}
+
+		private int GetParticleCountAfterCollisions( List<Particle> particles ) {
 			int lastWinnerIndex = -1;
 			int consecutiveWins = 0;
 			int targetConsecutiveWins = 1000;
@@ -84,13 +106,10 @@ p=<3,0,0>, v=<-1,0,0>, a=<0,0,0>";
 				positions = new Dictionary<string, List<int>>();
 
 				for( int i = 0; i < particles.Count; i++ ) {
-					Particle particle = particles[ i ];
-
 					if( particles[ i ] == null ) continue;
 
-					particles[ i ] = Update( particle );
+					Particle updatedParticle = particles[ i ] = Update( particles[ i ] );
 
-					Particle updatedParticle = particles[ i ];
 					string posKey = updatedParticle.p.x + "," + updatedParticle.p.y + "," + updatedParticle.p.z;
 					if( !positions.ContainsKey( posKey ) ) {
 						positions[ posKey ] = new List<int>();
@@ -99,15 +118,13 @@ p=<3,0,0>, v=<-1,0,0>, a=<0,0,0>";
 					positions[ posKey ].Add( i );
 				}
 
-				if( removeCollisions ) {
-					List<string> keys = new List<string>( positions.Keys );
-
-					foreach( string key in keys ) {
-						List<int> particleIndices = positions[ key ];
-						if( particleIndices.Count > 1 ) {
-							foreach( int index in particleIndices ) {
-								particles[ index ] = null;
-							}
+				List<string> keys = new List<string>( positions.Keys );
+				foreach( string key in keys ) {
+					List<int> particleIndices = positions[ key ];
+					if( particleIndices.Count > 1 ) {
+						foreach( int index in particleIndices ) {
+							// We need to null instead of remove; if we remove, our lastWinnerIndex becomes invalid!
+							particles[ index ] = null;
 						}
 					}
 				}
@@ -121,14 +138,13 @@ p=<3,0,0>, v=<-1,0,0>, a=<0,0,0>";
 				}
 			}
 
-			//DEBUG
 			int remainingParticles = 0;
 			foreach( Particle particle in particles ) {
-				if( particle != null ) remainingParticles++;
+				if( particle != null )
+					remainingParticles++;
 			}
-			Console.WriteLine( "   " + remainingParticles );
 
-			return lastWinnerIndex;
+			return remainingParticles;
 		}
 
 		private Particle Update( Particle particle ) {
