@@ -105,7 +105,7 @@ namespace AdventOfCode.Puzzles.Year2017.Day21 {
 			string[] inputArray = input.Split( '\n' );
 			foreach( string entry in inputArray ) {
 				Match match = rulesRegex.Match( entry );
-				rules.Add( new Rule( match.Groups[ 1 ].Value, match.Groups[ 2 ].Value ) );
+				rules.Add( new Rule( match.Groups[ 1 ].Value, match.Groups[ 2 ].Value.TrimEnd() ) );
 			}
 
 			return rules;
@@ -114,14 +114,14 @@ namespace AdventOfCode.Puzzles.Year2017.Day21 {
 		public override string Solve( string input, int part ) {
 			List<Rule> rules = ParseInput( input );
 			string currentPattern = ".#./..#/###";
-			
-			for( int i = 0; i < 1; i++ ) {
+
+			for( int i = 0; i < 2; i++ ) {
 				currentPattern = Iterate( currentPattern );
 			}
 
 			//DEBUG
 			Console.WriteLine();
-			Console.WriteLine( "FINAL STATE ");
+			Console.WriteLine( "FINAL STATE " );
 			Console.WriteLine( currentPattern );
 
 			return "" + GetOnPixelCount( currentPattern );
@@ -130,98 +130,155 @@ namespace AdventOfCode.Puzzles.Year2017.Day21 {
 		}
 
 		private string Iterate( string pattern ) {
-			string[] grid = pattern.Split( '/' );
+			string[] grid = StringToGrid( pattern );
 
 			if( grid.Length % 2 == 0 ) {
-				return String.Join( "/", IterateAxA( grid, 2 ) );
+				return GridToString( IterateAxA( grid, 2 ) );
 			}
 
-			return String.Join( "/", IterateAxA( grid, 3 ) );
+			return GridToString( IterateAxA( grid, 3 ) );
 		}
 
 		private string[] IterateAxA( string[] grid, int size ) {
-			int subGridSize = grid.Length / size;
-			int subGridCount = subGridSize * subGridSize;
-			List<char[,]> subGrids = new List<char[,]>();
+			int charsPerSubGrid = size * size;
+			int subGridCountSqrt = grid.Length / size;
+			int subGridCount = subGridCountSqrt * subGridCountSqrt;
+			string[,][] subGrids = new string[ subGridCountSqrt, subGridCountSqrt ][];
 
+			// Break grid into sub grids
 			for( int i = 0; i < subGridCount; i++ ) {
-				char[,] subGrid = new char[ size, size ];
+				int subGridX = i % subGridCountSqrt;
+				int subGridY = i / subGridCountSqrt;
 
+				string[] subGrid = new string[ size ];
 				for( int j = 0; j < size; j++ ) {
-					for( int k = 0; k < size; k++ ) {
-						int subGridX = i / size;
-						int subGridY = i % size;
-
-						subGrid[ j, k ] = grid[ subGridX * size + j ][ subGridY * size + k ];
-					}
+					subGrid[ j ] = grid[ j + subGridY * size ].Substring( subGridX * size, size );
 				}
 
-				subGrids.Add( subGrid );
+				subGrids[ subGridX, subGridY ] = subGrid;
 			}
 
-			List<string> subGridReplacements = new List<string>();
-			foreach( char[,] subGrid in subGrids ) {
-				string subGridString = "";
-				for( int i = 0; i < size; i++ ) {
-					for( int j = 0; j < size; j++ ) {
-						subGridString += subGrid[ i, j ];
-						if( j == size - 1 && i != size - 1 ) {
-							subGridString += "/";
+			// Translate sub grids into their replacements
+			string[,][] replacedSubGrids = new string[ subGridCountSqrt, subGridCountSqrt ][];
+			for( int i = 0; i < subGridCountSqrt; i++ ) {
+				for( int j = 0; j < subGridCountSqrt; j++ ) {
+					string subGridString = GridToString( subGrids[ i, j ] );
+
+					foreach( Rule rule in rules ) {
+						string newSubGridString = rule.CheckMatch( subGridString );
+						if( newSubGridString != null ) {
+							replacedSubGrids[ i, j ] = StringToGrid( newSubGridString );
+							break;
 						}
 					}
 				}
+			}
 
-				string newSubGridString = null;
-				foreach( Rule rule in rules ) {
-					newSubGridString = rule.CheckMatch( subGridString );
+			// Construct new grid
+			int replacedSubGridSize = replacedSubGrids[ 0, 0 ].Length;
+			string[] replacedGrid = new string[ subGridCountSqrt * replacedSubGridSize ];
+			for( int i = 0; i < replacedGrid.Length; i++ ) {
+				replacedGrid[ i ] = "";
 
-					if( newSubGridString != null ) {
-						subGridReplacements.Add( newSubGridString );
-						break;
-					}
+				for( int j = 0; j < subGridCountSqrt; j++ ) {
+					replacedGrid[ i ] += replacedSubGrids[ j, i / replacedSubGridSize ][ i % replacedSubGridSize ];
 				}
 			}
 			
-			//Assemble subgrids into final grid
-			string[] result = new string[ subGridSize * subGridReplacements[ 0 ].Length ];
-			
-			for( int i = 0; i < result.Length; i++ ) {
-				result[ i ] = "";
-
-				for( int j = 0; j < subGridSize; j++ ) {
-					result[ i ] += subGridReplacements[ i * subGridSize + j ];
-				}
-			}
-			/*
-			 * .#.
-			 * ..#
-			 * ###
-			 * 
-			 * ...
-			 * ...
-			 * ...
-			 * 
-			 * ...
-			 * ...
-			 * ...
-			 * 
-			 * etc
-			 */
-
-			//string[] result = new string[ subGridSize * size ];
-			//for( int i = 0; i < subGridSize * size; i++ ) {
-			//	result[ i ] = "";
-
-			//	for( int j = 0; j < subGridSize; j++ ) {
-			//		result[ i ] += subGridReplacements[ ( i / size ) * size + j / size ][ j % size ];
-			//	}
-			//}
-			
-			//DEBUG
-			Console.WriteLine( result[ 0 ] );
-
-			return result;
+			return replacedGrid;
 		}
+
+		private string GridToString( string[] grid ) {
+			return String.Join( "/", grid );
+		}
+
+		private string[] StringToGrid( string s ) {
+			return s.Split( '/' );
+		}
+
+		//private string[] IterateAxA( string[] grid, int size ) {
+		//	int subGridSize = grid.Length / size;
+		//	int subGridCount = subGridSize * subGridSize;
+		//	List<char[,]> subGrids = new List<char[,]>();
+
+		//	for( int i = 0; i < subGridCount; i++ ) {
+		//		char[,] subGrid = new char[ size, size ];
+
+		//		for( int j = 0; j < size; j++ ) {
+		//			for( int k = 0; k < size; k++ ) {
+		//				int subGridX = i / size;
+		//				int subGridY = i % size;
+
+		//				subGrid[ j, k ] = grid[ subGridX * size + j ][ subGridY * size + k ];
+		//			}
+		//		}
+
+		//		subGrids.Add( subGrid );
+		//	}
+
+		//	List<string> subGridReplacements = new List<string>();
+		//	foreach( char[,] subGrid in subGrids ) {
+		//		string subGridString = "";
+		//		for( int i = 0; i < size; i++ ) {
+		//			for( int j = 0; j < size; j++ ) {
+		//				subGridString += subGrid[ i, j ];
+		//				if( j == size - 1 && i != size - 1 ) {
+		//					subGridString += "/";
+		//				}
+		//			}
+		//		}
+
+		//		string newSubGridString = null;
+		//		foreach( Rule rule in rules ) {
+		//			newSubGridString = rule.CheckMatch( subGridString );
+
+		//			if( newSubGridString != null ) {
+		//				subGridReplacements.Add( newSubGridString );
+		//				break;
+		//			}
+		//		}
+		//	}
+			
+		//	//Assemble subgrids into final grid
+		//	string[] result = new string[ subGridSize * subGridReplacements[ 0 ].Length ];
+			
+		//	for( int i = 0; i < result.Length; i++ ) {
+		//		result[ i ] = "";
+
+		//		for( int j = 0; j < subGridSize; j++ ) {
+		//			result[ i ] += subGridReplacements[ i * subGridSize + j ];
+		//		}
+		//	}
+		//	/*
+		//	 * .#.
+		//	 * ..#
+		//	 * ###
+		//	 * 
+		//	 * ...
+		//	 * ...
+		//	 * ...
+		//	 * 
+		//	 * ...
+		//	 * ...
+		//	 * ...
+		//	 * 
+		//	 * etc
+		//	 */
+
+		//	//string[] result = new string[ subGridSize * size ];
+		//	//for( int i = 0; i < subGridSize * size; i++ ) {
+		//	//	result[ i ] = "";
+
+		//	//	for( int j = 0; j < subGridSize; j++ ) {
+		//	//		result[ i ] += subGridReplacements[ ( i / size ) * size + j / size ][ j % size ];
+		//	//	}
+		//	//}
+			
+		//	//DEBUG
+		//	Console.WriteLine( result[ 0 ] );
+
+		//	return result;
+		//}
 
 		private int GetOnPixelCount( string pattern ) {
 			int pixelCount = 0;
