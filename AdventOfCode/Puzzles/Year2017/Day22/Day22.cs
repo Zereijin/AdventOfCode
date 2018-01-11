@@ -10,8 +10,15 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 		LEFT
 	}
 
+	enum NodeState {
+		CLEAN,
+		WEAKENED,
+		INFECTED,
+		FLAGGED
+	}
+
 	class Day22 : Puzzle {
-		private Dictionary<int, Dictionary<int, bool>> infectionGrid;
+		private Dictionary<int, Dictionary<int, NodeState>> infectionGrid;
 		private Facing carrierFacing;
 		private Point carrierPosition;
 		private int infectionBurstCount;
@@ -26,22 +33,23 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 			testCases.Add( new TestCase( testMap, "5587", 1 ) );
 		}
 
-		private Dictionary<int, Dictionary<int, bool>> ParseInput( string input ) {
+		private Dictionary<int, Dictionary<int, NodeState>> ParseInput( string input ) {
 			string[] inputArray = input.Split( '\n' );
 
 			int gridHeight = inputArray.Length;
 			int gridWidth = inputArray[ 0 ].TrimEnd().Length;
 			Point midPoint = new Point( ( gridWidth - 1 ) / 2, ( gridHeight - 1 ) / 2 );
 
-			Dictionary<int, Dictionary<int, bool>> infectionGrid = new Dictionary<int, Dictionary<int, bool>>();
+			Dictionary<int, Dictionary<int, NodeState>> infectionGrid = new Dictionary<int, Dictionary<int, NodeState>>();
 
 			for( int i = 0; i < inputArray.Length; i++ ) {
 				int yPos = i - midPoint.Y;
-				infectionGrid.Add( yPos, new Dictionary<int, bool>() );
+				infectionGrid.Add( yPos, new Dictionary<int, NodeState>() );
 
 				for( int j = 0; j < inputArray[ i ].TrimEnd().Length; j++ ) {
 					int xPos = j - midPoint.X;
-					infectionGrid[ yPos ].Add( xPos, inputArray[ i ][ j ] == '#' );
+					NodeState state = inputArray[ i ][ j ] == '#' ? NodeState.INFECTED : NodeState.CLEAN;
+					infectionGrid[ yPos ].Add( xPos, state );
 				}
 			}
 
@@ -54,27 +62,36 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 			carrierPosition = new Point( 0, 0 );
 			carrierFacing = Facing.UP;
 
-			for( int i = 0; i < 10000; i++ ) {
-				StepVirus();
+			switch( part ) {
+				case 1:
+					for( int i = 0; i < 10000; i++ ) {
+						StepSporificaVirus();
+					}
+					break;
+				case 2:
+					//for( int i = 0; i < 10000000; i++ ) {
+					//	StepEvolvedSporificaVirus();
+					//}
+					break;
+				default:
+					return String.Format( "Day 22 part {0} solver not found.", part );
 			}
 
 			return "" + infectionBurstCount;
-
-			return String.Format( "Day 22 part {0} solver not found.", part );
 		}
 
-		private void StepVirus() {
+		private void StepSporificaVirus() {
 			// If infected, turn right.  Else, turn left.
 			if( !infectionGrid.ContainsKey( carrierPosition.Y ) ) {
-				infectionGrid.Add( carrierPosition.Y, new Dictionary<int, bool>() );
+				infectionGrid.Add( carrierPosition.Y, new Dictionary<int, NodeState>() );
 			}
 
 			if( !infectionGrid[ carrierPosition.Y ].ContainsKey( carrierPosition.X ) ) {
-				infectionGrid[ carrierPosition.Y ].Add( carrierPosition.X, false );
+				infectionGrid[ carrierPosition.Y ].Add( carrierPosition.X, NodeState.CLEAN );
 			}
 
-			bool isCurrentNodeInfected = infectionGrid[ carrierPosition.Y ][ carrierPosition.X ];
-			if( isCurrentNodeInfected ) {
+			NodeState currentNodeState = infectionGrid[ carrierPosition.Y ][ carrierPosition.X ];
+			if( currentNodeState == NodeState.INFECTED ) {
 				TurnCarrierRight();
 			} else {
 				TurnCarrierLeft();
@@ -82,27 +99,15 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 			}
 
 			// Flip current node state.
-			infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = !isCurrentNodeInfected;
+			if( currentNodeState == NodeState.INFECTED ) {
+				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.CLEAN;
+			} else {
+				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.INFECTED;
+			}
 
 			// Move carrier forward.
 			MoveCarrierForward();
 		}
-
-		//private int GetInfectedNodeCount() {
-		//	int infectionCount = 0;
-
-		//	List<int> yKeys = new List<int>( infectionGrid.Keys );
-		//	foreach( int y in yKeys ) {
-		//		List<int> xKeys = new List<int>( infectionGrid[ y ].Keys );
-		//		foreach( int x in xKeys ) {
-		//			if( infectionGrid[ y ][ x ] ) {
-		//				infectionCount++;
-		//			}					
-		//		}
-		//	}
-
-		//	return infectionCount;
-		//}
 
 		private void TurnCarrierRight() {
 			switch( carrierFacing ) {
