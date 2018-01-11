@@ -31,6 +31,7 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 ...";
 
 			testCases.Add( new TestCase( testMap, "5587", 1 ) );
+			testCases.Add( new TestCase( testMap, "2511944", 2 ) );
 		}
 
 		private Dictionary<int, Dictionary<int, NodeState>> ParseInput( string input ) {
@@ -69,9 +70,9 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 					}
 					break;
 				case 2:
-					//for( int i = 0; i < 10000000; i++ ) {
-					//	StepEvolvedSporificaVirus();
-					//}
+					for( int i = 0; i < 10000000; i++ ) {
+						StepEvolvedSporificaVirus();
+					}
 					break;
 				default:
 					return String.Format( "Day 22 part {0} solver not found.", part );
@@ -95,7 +96,6 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 				TurnCarrierRight();
 			} else {
 				TurnCarrierLeft();
-				infectionBurstCount++;
 			}
 
 			// Flip current node state.
@@ -103,6 +103,42 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.CLEAN;
 			} else {
 				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.INFECTED;
+				infectionBurstCount++;
+			}
+
+			// Move carrier forward.
+			MoveCarrierForward();
+		}
+
+		private void StepEvolvedSporificaVirus() {
+			// If clean, turn left.  If weakened, don't turn.  If infected, turn right.  If flagged, reverse.
+			if( !infectionGrid.ContainsKey( carrierPosition.Y ) ) {
+				infectionGrid.Add( carrierPosition.Y, new Dictionary<int, NodeState>() );
+			}
+
+			if( !infectionGrid[ carrierPosition.Y ].ContainsKey( carrierPosition.X ) ) {
+				infectionGrid[ carrierPosition.Y ].Add( carrierPosition.X, NodeState.CLEAN );
+			}
+
+			NodeState currentNodeState = infectionGrid[ carrierPosition.Y ][ carrierPosition.X ];
+			if( currentNodeState == NodeState.CLEAN ) {
+				TurnCarrierLeft();
+			} else if( currentNodeState == NodeState.INFECTED ) {
+				TurnCarrierRight();
+			} else if( currentNodeState == NodeState.FLAGGED ) {
+				ReverseCarrier();
+			}
+
+			// Update current node state.
+			if( currentNodeState == NodeState.CLEAN ) {
+				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.WEAKENED;
+			} else if( currentNodeState == NodeState.WEAKENED ) {
+				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.INFECTED;
+				infectionBurstCount++;
+			} else if( currentNodeState == NodeState.INFECTED ) {
+				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.FLAGGED;
+			} else if( currentNodeState == NodeState.FLAGGED ) {
+				infectionGrid[ carrierPosition.Y ][ carrierPosition.X ] = NodeState.CLEAN;
 			}
 
 			// Move carrier forward.
@@ -128,6 +164,12 @@ namespace AdventOfCode.Puzzles.Year2017.Day22 {
 
 		private void TurnCarrierLeft() {
 			for( int i = 0; i < 3; i++ ) {
+				TurnCarrierRight();
+			}
+		}
+
+		private void ReverseCarrier() {
+			for( int i = 0; i < 2; i++ ) {
 				TurnCarrierRight();
 			}
 		}
