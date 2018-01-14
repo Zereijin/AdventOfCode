@@ -93,6 +93,10 @@ namespace AdventOfCode.Puzzles.Year2017.Day23 {
 
 			return 0;
 		}
+
+		public void SetJumpDistance( string distance ) {
+			jumpDistance = distance;
+		}
 	}
 
 	class Day23 : Puzzle {
@@ -144,14 +148,12 @@ namespace AdventOfCode.Puzzles.Year2017.Day23 {
 			registry = new Dictionary<char, long>();
 			mulCounter = 0;
 
-			List<Command> commands = ParseInput( input );
-
 			switch( part ) {
 				case 1:
-					Run( commands );
+					Run( ParseInput( input ) );
 					return "" + mulCounter;
-				//case 2:
-				//	return "" + GetProgram1SendCountFromThreadedDuet( input );
+				case 2:
+					return "" + RunOptimized();
 			}
 
 			return String.Format( "Day 23 part {0} solver not found.", part );
@@ -178,6 +180,28 @@ namespace AdventOfCode.Puzzles.Year2017.Day23 {
 
 				index++;
 			}
+		}
+
+		private int RunOptimized() {
+			int start = 84 * 100 + 100000;
+			int notPrimeCount = 0;
+
+			for( int i = start; i <= start + 17000; i += 17 ) {
+				bool isPrime = true;
+
+				for( int a = 2; a < start / 2; a++ ) {
+					if( i % a == 0 ) {
+						isPrime = false;
+						break;
+					}
+				}
+
+				if( !isPrime ) {
+					notPrimeCount++;
+				}
+			}
+
+			return notPrimeCount;
 		}
 	}
 }
