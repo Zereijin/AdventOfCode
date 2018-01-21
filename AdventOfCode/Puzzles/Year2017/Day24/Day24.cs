@@ -3,169 +3,123 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace AdventOfCode.Puzzles.Year2017.Day24 {
+	struct BridgeProperty {
+		public int length;
+		public int strength;
+
+		public BridgeProperty( int l, int s ) {
+			length = l;
+			strength = s;
+		}
+	}
+
 	class Component {
-		private int[] ports;
-		private bool[] portAvailabilities;
+		private int[] ports = new int[ 2 ];
 
-		public Component( int[] ports ) {
-			this.ports = ports;
-
-			portAvailabilities = new bool[ ports.Length ];
-			ResetAvailabilities();
+		public Component( int portA, int portB ) {
+			ports[ 0 ] = portA;
+			ports[ 1 ] = portB;
 		}
 
-		private void ResetAvailabilities() {
-			for( int i = 0; i < portAvailabilities.Length; i++ ) {
-				portAvailabilities[ i ] = true;
-			}
-		}
-
-		/***
-		 * Returns the index of the first connectable port, or -1 if no connection is possible
-		 */
-		public int FindConnection( int requiredPins ) {
-			for( int i = 0; i < ports.Length; i++ ) {
-				if( portAvailabilities[ i ] ) {
-					if( ports[ i ] == requiredPins ) {
-						return i;
-					}
+		public bool HasPort( int port ) {
+			foreach( int p in ports ) {
+				if( p == port ) {
+					return true;
 				}
 			}
 
-			return -1;
+			return false;
 		}
 
-		public bool Connect( int requiredPins ) {
-			int port = FindConnection( requiredPins );
-
-			if( port >= 0 ) {
-				portAvailabilities[ port ] = false;
+		public int GetOppositePort( int port ) {
+			if( ports[ 0 ] == port ) {
+				return ports[ 1 ];
 			}
 
-			return ( port >= 0 );
-		}
-
-		public void Disconnect( int requiredPins ) {
-			for( int i = ports.Length - 1; i >= 0; i-- ) {
-				if( !portAvailabilities[ i ] ) {
-					if( ports[ i ] == requiredPins ) {
-						portAvailabilities[ i ] = true;
-						break;
-					}
-				}
-			}
+			return ports[ 0 ];
 		}
 
 		public int GetStrength() {
-			int totalStrength = 0;
+			int strength = 0;
 
 			foreach( int port in ports ) {
-				totalStrength += port;
+				strength += port;
 			}
 
-			return totalStrength;
+			return strength;
 		}
 
-		public List<int> GetUnconnectedPorts() {			
-			List<int> unconnectedPorts = new List<int>();
-
-			for( int i = 0; i < ports.Length; i++ ) {
-				if( portAvailabilities[ i ] ) {
-					unconnectedPorts.Add( ports[ i ] );
-				}
-			}
-
-			return unconnectedPorts;
-		}
-
-		public string ToString() {
+		public override string ToString() {
 			return "" + ports[ 0 ] + "/" + ports[ 1 ];
 		}
 	}
 
 	class Bridge {
+		private const int basePort = 0;
+
 		private List<Component> components;
-		private List<int> connectedPorts;
-		private int looseEndPins;
+		private List<int> connectors;
 		private int strength;
+		private int openPort;
 
 		public Bridge() {
 			components = new List<Component>();
-			connectedPorts = new List<int>();
-			strength = 0;
-			UpdateLooseEnd();
+			connectors = new List<int>();
+			strength = basePort;
+			UpdateOpenPort();
 		}
 
-		public bool Connect( Component component ) {
-			if( components.Contains( component ) ) return false;
-			
-			if( !component.Connect( looseEndPins ) ) return false;
-			
-			if( components.Count > 0 ) {
-				GetLastComponent().Connect( looseEndPins );
-			}
-			components.Add( component );
-
-			connectedPorts.Add( looseEndPins );
-
-			strength += component.GetStrength();
-			UpdateLooseEnd();
-
-			return true;
-		}
-
-		public void DisconnectLast() {
-			int removalIndex = components.Count - 1;
-			strength -= components[ removalIndex ].GetStrength();
-			components.RemoveAt( removalIndex );
-
+		private void UpdateOpenPort() {
 			if( components.Count <= 0 ) {
-				connectedPorts = new List<int>();
-			} else {
-				GetLastComponent().Disconnect( connectedPorts[ connectedPorts.Count - 1 ] );
-				connectedPorts.RemoveAt( connectedPorts.Count - 1 );
-			}
-
-			UpdateLooseEnd();
-		}
-
-		private void UpdateLooseEnd() {
-			if( components.Count <= 0 ) {
-				looseEndPins = 0;
+				// There are no components, so use the bridge's initial value;
+				openPort = basePort;
 				return;
 			}
 
-			List<int> loosePorts = components[ components.Count - 1 ].GetUnconnectedPorts();
+			int lastComponentIndex = components.Count - 1;
+			openPort = components[ lastComponentIndex ].GetOppositePort( connectors[ lastComponentIndex ] );
+		}
 
-			if( loosePorts.Count == 1 ) {
-				looseEndPins = loosePorts[ 0 ];
-			} else {
-				Console.WriteLine( "Connected to " + components[ components.Count - 1 ].ToString() + " with " + loosePorts.Count + " unconnected ports!" );
-			}
+		public bool Connect( Component component ) {
+			if( !component.HasPort( openPort ) ) return false;
+
+			if( components.Contains( component ) ) return false;
+
+			PerformConnect( component );
+			return true;
+		}
+
+		private void PerformConnect( Component component ) {
+			components.Add( component );
+			connectors.Add( openPort );
+			strength += component.GetStrength();
+			UpdateOpenPort();
+		}
+
+		public void DisconnectLast() {
+			int lastComponentIndex = components.Count - 1;
+			strength -= components[ lastComponentIndex ].GetStrength();
+			components.RemoveAt( lastComponentIndex );
+			connectors.RemoveAt( lastComponentIndex );
+			UpdateOpenPort();
 		}
 
 		public int GetStrength() {
 			return strength;
 		}
 
-		public int GetLooseEndPins() {
-			return looseEndPins;
+		public int GetLength() {
+			return components.Count;
 		}
 
-		public Component GetLastComponent() {
-			if( components.Count == 0 ) {
-				return null;
-			}
-
-			return components[ components.Count - 1 ];
-		}
-
-		public void Print() {
+		public override string ToString() {
 			string s = "";
+
 			foreach( Component c in components ) {
-				s += c.ToString() + "--";
+				s += c + "--";
 			}
-			Console.WriteLine( s );
+
+			return s;
 		}
 	}
 
@@ -189,6 +143,7 @@ namespace AdventOfCode.Puzzles.Year2017.Day24 {
 
 			testCases.Add( new TestCase( testSet1, "24", 1 ) );
 			testCases.Add( new TestCase( testSet2, "31", 1 ) );
+			testCases.Add( new TestCase( testSet2, "19", 2 ) );
 		}
 
 		private void ParseInput( string input ) {
@@ -199,9 +154,8 @@ namespace AdventOfCode.Puzzles.Year2017.Day24 {
 
 			foreach( string entry in inputArray ) {
 				Match match = componentRegex.Match( entry );
-
-				int[] ports = { Int32.Parse( match.Groups[ 1 ].Value ), Int32.Parse( match.Groups[ 2 ].Value ) };
-				Component component = new Component( ports );
+				
+				Component component = new Component( Int32.Parse( match.Groups[ 1 ].Value ), Int32.Parse( match.Groups[ 2 ].Value ) );
 				components.Add( component );
 			}
 		}
@@ -209,20 +163,24 @@ namespace AdventOfCode.Puzzles.Year2017.Day24 {
 		public override string Solve( string input, int part ) {
 			ParseInput( input );
 
-			return "" + GetStrengthOfStrongestBridge( new Bridge() );
+			switch( part ) {
+				case 1:
+					return "" + GetStrengthOfStrongestBridge( new Bridge() );
+				case 2:
+					return "" + GetStrengthOfStrongestLongestBridge( new Bridge() );
+
+			}
 
 			return String.Format( "Day 24 part {0} solver not found.", part );
 		}
 
 		private int GetStrengthOfStrongestBridge( Bridge bridge ) {
 			int bestStrength = bridge.GetStrength();
-			int looseEnd = bridge.GetLooseEndPins();
 
 			foreach( Component component in components ) {
-				if( component != bridge.GetLastComponent() && bridge.Connect( component ) ) {
-
+				if( bridge.Connect( component ) ) {
 					//DEBUG
-					bridge.Print();
+					//Console.WriteLine( bridge );
 
 					int subBridgeStrength = GetStrengthOfStrongestBridge( bridge );
 					if( subBridgeStrength > bestStrength ) {
@@ -232,8 +190,55 @@ namespace AdventOfCode.Puzzles.Year2017.Day24 {
 					bridge.DisconnectLast();
 				}
 			}
-			
+
 			return bestStrength;
+		}
+
+		private int GetStrengthOfStrongestLongestBridge( Bridge bridge ) {
+			BridgeProperty longestBridgeProperties = GetLongestBridges( bridge );
+
+			return longestBridgeProperties.strength;
+		}
+
+		private BridgeProperty GetLongestBridges( Bridge bridge ) {
+			//List<Bridge> subBridges = new List<Bridge>();
+			//bool wasConnectionMade = false;
+
+			//foreach( Component component in components ) {
+			//	if( bridge.Connect( component ) ) {
+			//		wasConnectionMade = true;
+
+			//		subBridges.Add( bridge );
+
+			//		bridge.DisconnectLast();
+			//	}
+			//}
+
+			//if( wasConnectionMade ) {
+			//	return subBridges;
+			//}
+
+			//List<Bridge> bridges = new List<Bridge>();
+			//bridges.Add( bridge );
+			//return bridges;
+
+			BridgeProperty bestBridgeProperties = new BridgeProperty( bridge.GetLength(), bridge.GetStrength() );
+
+			foreach( Component component in components ) {
+				if( bridge.Connect( component ) ) {
+					BridgeProperty newBridgeProperties = GetLongestBridges( bridge );
+
+					if( newBridgeProperties.length > bestBridgeProperties.length
+						|| ( newBridgeProperties.length == bestBridgeProperties.length && newBridgeProperties.strength > bestBridgeProperties.strength ) ) {
+
+						bestBridgeProperties = newBridgeProperties;
+					}
+
+					bridge.DisconnectLast();
+				}
+			}
+
+			return bestBridgeProperties;
 		}
 	}
 }
